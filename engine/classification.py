@@ -9,8 +9,10 @@ from utils.checkpoint import get_pretrained_backbone_weights
 from utils.loggers import MetricLogger, SmoothedValue
 from tv_ref.utils import reduce_dict
 from utils.tensor import nested_to_device
+from torchvision.models import resnet18, ResNet18_Weights
 
 cpu_device = torch.device("cpu")
+
 
 def resnet_set_trainable_layers(
     model,
@@ -30,10 +32,28 @@ def resnet_set_trainable_layers(
 
     return model
 
+def load_backbone(config, device):
+    if config.model.weights == 'cl':
+        backbone = load_cl_pretrained(
+            config.model.cl_model_name,
+            device
+        )
+    elif config.model.weights == 'imagenet':
+        backbone = resnet18(weights=ResNet18_Weights.IMAGENET1K_V1)
+    else:
+        backbone = resnet18(weights=None)
 
-def load_cl_pretrained(model, cl_model_name):
+    backbone = resnet_set_trainable_layers(
+        backbone, config.model.trainable_backbone_layers if config.model.weights else 5)
+
+    return backbone
+
+
+def load_cl_pretrained(cl_model_name, device):
     # set load_part = "feature_extractors.xrays" to load the pretrained image backbone.
-    device = next(model.parameters()).device
+
+    backbone = resnet18(weights=None)
+
 
     # load weights into this backbone then apply fpn.
     cp = torch.load(
@@ -41,9 +61,10 @@ def load_cl_pretrained(model, cl_model_name):
     )
 
     backbone_cp_dict = get_pretrained_backbone_weights(cp, "xray_backbone.")
-    model.backbone.load_state_dict(backbone_cp_dict, strict=True)
+    backbone.load_state_dict(backbone_cp_dict, strict=True)
 
-    return model
+    return backbone
+
 
 class ClassificationEvaluator:
     def __init__(self) -> None:

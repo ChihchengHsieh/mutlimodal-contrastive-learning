@@ -24,6 +24,7 @@ class LesionDetectionArgs:
     early_stopping_patience: int = 10
     warmup_epoch: int = 0
 
+
 @dataclass
 class ImageClassificationArgs:
     name: str = None

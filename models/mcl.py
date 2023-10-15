@@ -50,8 +50,8 @@ class MultimodalContrastiveLearning(nn.Module):
                  m2_pool=None,
                  lambda_0=0.5,
                  temperature=0.1,
-                 pj_pooled_dim=2048,
-                 pj_embedding_dim=2048,
+                 pj_pooled_dim=512,
+                 pj_embedding_dim=512,
                  pj_dim=128,
                  ) -> None:
         

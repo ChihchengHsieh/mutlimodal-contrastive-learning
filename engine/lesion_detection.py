@@ -3,30 +3,41 @@ from copy import deepcopy
 import torch
 import os
 import torch.nn as nn
-
-from torchvision.models import resnet50
+from torchvision.models import resnet18, ResNet18_Weights
 from torchvision.models.detection.backbone_utils import _resnet_fpn_extractor
 from utils.checkpoint import get_model_path, get_pretrained_backbone_weights, remove_existing_cp, save_checkpoint
 
-def load_cl_pretrained(model, cl_model_name, trainable_backbone_layers):
-    # set load_part = "feature_extractors.xrays" to load the pretrained image backbone.
-    device = next(model.parameters()).device
 
+def load_backbone(config, device):
+    if config.model.weights == 'cl':
+        backbone = load_cl_pretrained(
+            config.model.cl_model_name,
+            device
+        )
+    elif config.model.weights == 'imagenet':
+        backbone = resnet18(weights=ResNet18_Weights.IMAGENET1K_V1)
+    else:
+        backbone = resnet18(weights=None)
+
+    backbone = _resnet_fpn_extractor(
+        backbone, config.model.trainable_backbone_layers if config.model.weights else 5)
+
+    return backbone
+
+
+def load_cl_pretrained(cl_model_name, device):
+    # set load_part = "feature_extractors.xrays" to load the pretrained image backbone.
     # load weights into this backbone then apply fpn.
-    backbone = resnet50(weights=None)
+    backbone = resnet18(weights=None)
 
     cp = torch.load(
         os.path.join("checkpoints", cl_model_name, "model"), map_location=device
     )
 
     backbone_cp_dict = get_pretrained_backbone_weights(cp, "xray_backbone.")
-
     backbone.load_state_dict(backbone_cp_dict, strict=True)
-    backbone = _resnet_fpn_extractor(
-        backbone, trainable_backbone_layers)
-    model.backbone = backbone
 
-    return model
+    return backbone
 
 
 def get_ap_ar(

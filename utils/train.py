@@ -74,7 +74,7 @@ class TrainingInfo:
 
     def __str__(self):
         title = "=" * 40 + \
-            f"For Training [{self.config.training.name}]" + "=" * 40
+            f"For Training [{self.config.training.name} - {self.config.model.name}]" + "=" * 40
         section_divider = len(title) * "="
 
         return (
@@ -336,3 +336,11 @@ def end_train(
     print(train_info)
 
     return train_info
+
+
+def set_weights_trainable(model, optimiser, model_part = None):
+    for n, param in model.named_parameters():
+        if (model_part is None or n.startswith(model_part)) and param.requires_grad == False:
+            param.requires_grad = True
+            optimiser.add_param_group({'params': param})
+    return model, optimiser

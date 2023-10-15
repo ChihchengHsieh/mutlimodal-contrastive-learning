@@ -27,10 +27,12 @@ def train_one_epoch(model, optimiser, data_loader, device, epoch, print_freq, sc
             optimiser, start_factor=warmup_factor, total_iters=warmup_iters
         )
 
+
     for images, targets in metric_logger.log_every(data_loader, print_freq, header):
         images = list(image.to(device) for image in images)
         targets = [{k: v.to(device) if isinstance(
             v, torch.Tensor) else v for k, v in t.items()} for t in targets]
+        
         with torch.cuda.amp.autocast(enabled=scaler is not None):
             loss_dict, _ = model(images, targets)
             losses = sum(loss for loss in loss_dict.values())
@@ -94,6 +96,8 @@ def evaluate(model, data_loader, device, return_evaluator=False):
 
     for images, targets in metric_logger.log_every(data_loader, 100, header):
         images = list(img.to(device) for img in images)
+        targets = [{k: v.to(device) if isinstance(
+            v, torch.Tensor) else v for k, v in t.items()} for t in targets]
         if torch.cuda.is_available():
             torch.cuda.synchronize()
         model_time = time.time()

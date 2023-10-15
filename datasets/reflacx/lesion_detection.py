@@ -13,6 +13,14 @@ import numpy as np
 import torch
 from . import constants as r_constant
 
+def box_xyxy_to_cxcywh(x):
+    if len(x) == 0:
+        return x
+    x0, y0, x1, y1 = x.unbind(-1)
+    b = [(x0 + x1) / 2, (y0 + y1) / 2,
+         (x1 - x0), (y1 - y0)]
+    return torch.stack(b, dim=-1)
+
 
 class REFLACXLesionDetectionDataset(torch.utils.data.Dataset):
     '''
@@ -26,17 +34,19 @@ class REFLACXLesionDetectionDataset(torch.utils.data.Dataset):
                  split_str,
                  label_cols=r_constant.TOP5_LABEL_COLS,
                  transform=None,
+                 cxcywh=False,
                  ):
         self.df_path = df_path
         self.mimic_eye_path = mimic_eye_path
         self.image_size = image_size
         self.label_cols = label_cols
         self.split_str = split_str
+        self.cxcywh = cxcywh
 
         self.df = pd.read_csv(self.df_path)
 
         if not self.split_str is None:
-            self.df = self.df[self.df["split"] == self.split_str]
+            self.df = self.df[self.df["split"] == self.split_str][:50]
 
         self.__preprocess_label()
         self.__init_transform(transform)
@@ -140,15 +150,15 @@ class REFLACXLesionDetectionDataset(torch.utils.data.Dataset):
         transformed = self.transform(image=xray.repeat(3, 1, 1).permute(
             1, 2, 0).numpy(), bboxes=bb_label['bbox'], label=bb_label['label'])
         xray = torch.tensor(transformed['image']).permute(2, 0, 1)/255
-        boxes = torch.tensor(transformed['bboxes'])
+        boxes = torch.tensor(transformed['bboxes']).float()
 
         target = {
             'image_id': idx,
-            'boxes': boxes if len(boxes) > 0 else torch.zeros((0, 4)),
+            'boxes': boxes if len(boxes) > 0 else torch.zeros((0, 4)).float(),
             'labels': torch.tensor(transformed['label'], dtype=torch.int64),
-            'area': (boxes[:, 3] - boxes[:, 1]) * (boxes[:, 2] - boxes[:, 0]) if len(boxes) > 0 else torch.zeros((0, 4)),
+            'area': (boxes[:, 3] - boxes[:, 1]) * (boxes[:, 2] - boxes[:, 0]) if len(boxes) > 0 else torch.zeros((0, 4)).float(),
             'iscrowd': torch.zeros((num_objs,), dtype=torch.int64),
-
+            "orig_size": torch.tensor([self.image_size, self.image_size],dtype=torch.int64)
         }
 
         return xray, target

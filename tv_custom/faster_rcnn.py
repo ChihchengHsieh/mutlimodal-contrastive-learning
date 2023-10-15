@@ -187,7 +187,7 @@ class RoIHeads(nn.Module):
         gt_labels = [t["labels"] for t in targets]
 
         # append ground-truth bboxes to propos
-        proposals = self.add_gt_proposals(proposals, gt_boxes)
+        # proposals = self.add_gt_proposals(proposals, gt_boxes)
 
         # get matching gt indices for each proposal
         matched_idxs, labels = self.assign_targets_to_proposals(
@@ -981,7 +981,8 @@ class FasterRCNN(GeneralizedRCNN):
         box_roi_pool=None,
         box_head=None,
         box_predictor=None,
-        box_score_thresh=0.05,
+        box_score_thresh=0.0,
+        # box_score_thresh=0.05,
         box_nms_thresh=0.5,
         box_detections_per_img=100,
         box_fg_iou_thresh=0.5,
@@ -1019,6 +1020,9 @@ class FasterRCNN(GeneralizedRCNN):
 
         out_channels = backbone.out_channels
         if rpn_anchor_generator is None:
+            # anchor_sizes = ((32,), (64,), (128,), (256,), (512,))
+            # aspect_ratios = ((0.5, 1.0, 2.0),) * len(anchor_sizes)
+            # return AnchorGenerator(anchor_sizes, aspect_ratios)
             rpn_anchor_generator = _default_anchorgen()
         if rpn_head is None:
             rpn_head = RPNHead(
@@ -1048,12 +1052,12 @@ class FasterRCNN(GeneralizedRCNN):
 
         if box_head is None:
             resolution = box_roi_pool.output_size[0]
-            representation_size = 1024
+            representation_size = 16
             box_head = TwoMLPHead(
                 out_channels * resolution**2, representation_size)
 
         if box_predictor is None:
-            representation_size = 1024
+            representation_size = 16
             box_predictor = FastRCNNPredictor(representation_size, num_classes)
 
         roi_heads = RoIHeads(
