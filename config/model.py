@@ -41,14 +41,15 @@ class DETRArgs:
     trainable_backbone_layers: int = 5  # [0, 5]
     release_fixed_weights_after: int = None
 
-    hidden_dim: int = 256
+    
+    hidden_dim: int = 32
     dilation: bool = False
     position_embedding: str = "sine"
     dropout: float = 0.1
-    nheads: int = 8
-    dim_feedforward: int = 2048
-    enc_layers: int = 6
-    dec_layers: int = 6
+    nheads: int = 4
+    dim_feedforward: int = 64
+    enc_layers: int = 3
+    dec_layers: int = 3
     pre_norm: bool = False
     num_queries: int = 100
     aux_loss: bool = True
@@ -58,3 +59,21 @@ class DETRArgs:
     giou_loss_coef: float = 2
     bbox_loss_coef: float = 5
     eos_coef: float = 0.1
+
+    # hidden_dim: int = 256
+    # dilation: bool = False
+    # position_embedding: str = "sine"
+    # dropout: float = 0.1
+    # nheads: int = 8
+    # dim_feedforward: int = 2048
+    # enc_layers: int = 6
+    # dec_layers: int = 6
+    # pre_norm: bool = False
+    # num_queries: int = 100
+    # aux_loss: bool = True
+    # set_cost_class: float = 1
+    # set_cost_bbox: float = 5
+    # set_cost_giou: float = 2
+    # giou_loss_coef: float = 2
+    # bbox_loss_coef: float = 5
+    # eos_coef: float = 0.1

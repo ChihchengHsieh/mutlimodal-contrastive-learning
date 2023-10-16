@@ -6,36 +6,39 @@ import pandas as pd
 
 from torchvision.io import read_image
 from torchvision.ops.boxes import masks_to_boxes
+
 # from torchvision import tv_tensors
 # from torchvision.transforms.v2 import functional as F
 import albumentations
 import numpy as np
 import torch
 from . import constants as r_constant
+from torchvision.ops.boxes import box_area
+
 
 def box_xyxy_to_cxcywh(x):
     if len(x) == 0:
         return x
     x0, y0, x1, y1 = x.unbind(-1)
-    b = [(x0 + x1) / 2, (y0 + y1) / 2,
-         (x1 - x0), (y1 - y0)]
+    b = [(x0 + x1) / 2, (y0 + y1) / 2, (x1 - x0), (y1 - y0)]
     return torch.stack(b, dim=-1)
 
 
 class REFLACXLesionDetectionDataset(torch.utils.data.Dataset):
-    '''
+    """
     This class load REFLACX from  MIMIC-EYE dataset.
-    '''
+    """
 
-    def __init__(self,
-                 df_path,
-                 mimic_eye_path,
-                 image_size,
-                 split_str,
-                 label_cols=r_constant.TOP5_LABEL_COLS,
-                 transform=None,
-                 cxcywh=False,
-                 ):
+    def __init__(
+        self,
+        df_path,
+        mimic_eye_path,
+        image_size,
+        split_str,
+        label_cols=r_constant.TOP5_LABEL_COLS,
+        transform=None,
+        cxcywh=False,
+    ):
         self.df_path = df_path
         self.mimic_eye_path = mimic_eye_path
         self.image_size = image_size
@@ -46,7 +49,7 @@ class REFLACXLesionDetectionDataset(torch.utils.data.Dataset):
         self.df = pd.read_csv(self.df_path)
 
         if not self.split_str is None:
-            self.df = self.df[self.df["split"] == self.split_str][:50]
+            self.df = self.df[self.df["split"] == self.split_str]
 
         self.__preprocess_label()
         self.__init_transform(transform)
@@ -63,16 +66,21 @@ class REFLACXLesionDetectionDataset(torch.utils.data.Dataset):
                     albumentations.HorizontalFlip(p=0.5),
                 ],
                 bbox_params=albumentations.BboxParams(
-                    format="pascal_voc", label_fields=["label"]),
+                    format="pascal_voc", label_fields=["label"]
+                ),
             )
 
     def __get_paths(self, data):
-        reflacx_id = data['id']
-        patient_id = data['subject_id']
-        study_id = data['study_id']
-        dicom_id = data['dicom_id']
+        reflacx_id = data["id"]
+        patient_id = data["subject_id"]
+        study_id = data["study_id"]
+        dicom_id = data["dicom_id"]
         image_path = os.path.join(
-            self.mimic_eye_path, f"patient_{patient_id}", "CXR-JPG", f"s{study_id}", f"{dicom_id}.jpg",
+            self.mimic_eye_path,
+            f"patient_{patient_id}",
+            "CXR-JPG",
+            f"s{study_id}",
+            f"{dicom_id}.jpg",
         )
         bbox_path = os.path.join(
             self.mimic_eye_path,
@@ -88,14 +96,16 @@ class REFLACXLesionDetectionDataset(torch.utils.data.Dataset):
         bb_list = []
         bbox_df = pd.read_csv(bbox_path)
         for i, bb in bbox_df.iterrows():
-            for l in [col for col in bb.keys() if not col in r_constant.DEFAULT_BOX_FIX_COLS]:
+            for l in [
+                col for col in bb.keys() if not col in r_constant.DEFAULT_BOX_FIX_COLS
+            ]:
                 if bb[l] == True:
                     label = r_constant.DEFAULT_REPETITIVE_LABEL_REVERSED_MAP[l]
                     if label in self.label_cols:
-                        xmax = np.clip(bb['xmax'], 0, img_width)
-                        xmin = np.clip(bb['xmin'], 0, img_width)
-                        ymax = np.clip(bb['ymax'], 0, img_height)
-                        ymin = np.clip(bb['ymin'], 0, img_height)
+                        xmax = np.clip(bb["xmax"], 0, img_width)
+                        xmin = np.clip(bb["xmin"], 0, img_width)
+                        ymax = np.clip(bb["ymax"], 0, img_height)
+                        ymin = np.clip(bb["ymin"], 0, img_height)
 
                         # width = xmax-xmin
                         # height = ymax-ymin
@@ -103,13 +113,15 @@ class REFLACXLesionDetectionDataset(torch.utils.data.Dataset):
                         # assert height >= 0, f"Height of BB should > 0, but got [{height}]"
                         # if width * height > 0:
 
-                        bb_list.append({
-                            "x_min": xmin,
-                            "y_min": ymin,
-                            "x_max": xmax,
-                            'y_max': ymax,
-                            'label': self.lesion_to_idx(label),
-                        })
+                        bb_list.append(
+                            {
+                                "x_min": xmin,
+                                "y_min": ymin,
+                                "x_max": xmax,
+                                "y_max": ymax,
+                                "label": self.lesion_to_idx(label),
+                            }
+                        )
 
         return pd.DataFrame(
             bb_list, columns=["x_min", "y_min", "x_max", "y_max", "label"]
@@ -118,9 +130,9 @@ class REFLACXLesionDetectionDataset(torch.utils.data.Dataset):
     def __get_bb_label(self, bbox_path, img_height, img_width):
         bb_df = self.__get_bb_df(bbox_path, img_height, img_width)
         bbox = torch.tensor(
-            np.array(bb_df[["x_min", "y_min", "x_max", "y_max"]], dtype=float))
-        label = torch.tensor(
-            np.array(bb_df["label"]).astype(int), dtype=torch.int64)
+            np.array(bb_df[["x_min", "y_min", "x_max", "y_max"]], dtype=float)
+        )
+        label = torch.tensor(np.array(bb_df["label"]).astype(int), dtype=torch.int64)
 
         return {
             "bbox": bbox,
@@ -130,8 +142,7 @@ class REFLACXLesionDetectionDataset(torch.utils.data.Dataset):
     def __preprocess_label(
         self,
     ):
-        self.df[r_constant.ALL_LABEL_COLS] = self.df[r_constant.ALL_LABEL_COLS].gt(
-            0)
+        self.df[r_constant.ALL_LABEL_COLS] = self.df[r_constant.ALL_LABEL_COLS].gt(0)
 
     def __len__(self):
         return len(self.df)
@@ -145,20 +156,25 @@ class REFLACXLesionDetectionDataset(torch.utils.data.Dataset):
         img_height, img_width = xray.shape[1], xray.shape[2]
 
         bb_label = self.__get_bb_label(bbox_path, img_height, img_width)
-        num_objs = len(bb_label['bbox'])
+        num_objs = len(bb_label["bbox"])
 
-        transformed = self.transform(image=xray.repeat(3, 1, 1).permute(
-            1, 2, 0).numpy(), bboxes=bb_label['bbox'], label=bb_label['label'])
-        xray = torch.tensor(transformed['image']).permute(2, 0, 1)/255
-        boxes = torch.tensor(transformed['bboxes']).float()
+        transformed = self.transform(
+            image=xray.repeat(3, 1, 1).permute(1, 2, 0).numpy(),
+            bboxes=bb_label["bbox"],
+            label=bb_label["label"],
+        )
+        xray = torch.tensor(transformed["image"]).permute(2, 0, 1) / 255
+        boxes = torch.tensor(transformed["bboxes"]).float()  # x1,y1,x2,y2
 
         target = {
-            'image_id': idx,
-            'boxes': boxes if len(boxes) > 0 else torch.zeros((0, 4)).float(),
-            'labels': torch.tensor(transformed['label'], dtype=torch.int64),
-            'area': (boxes[:, 3] - boxes[:, 1]) * (boxes[:, 2] - boxes[:, 0]) if len(boxes) > 0 else torch.zeros((0, 4)).float(),
-            'iscrowd': torch.zeros((num_objs,), dtype=torch.int64),
-            "orig_size": torch.tensor([self.image_size, self.image_size],dtype=torch.int64)
+            "image_id": idx,
+            "boxes": boxes if len(boxes) > 0 else torch.zeros((0, 4)).float(),
+            "labels": torch.tensor(transformed["label"], dtype=torch.int64),
+            "area": box_area(boxes) if len(boxes) > 0 else torch.zeros((0, 4)).float(),
+            "iscrowd": torch.zeros((num_objs,), dtype=torch.int64),
+            "orig_size": torch.tensor(
+                [self.image_size, self.image_size], dtype=torch.int64
+            ),
         }
 
         return xray, target

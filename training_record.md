@@ -399,3 +399,53 @@ The final model has been saved to: [lesion_detection_ImageNet_Fix5layers_ap_0_08
 
 
 ### Reduce faster-rcnn size
+
+
+Test:  [  0/114]  eta: 0:01:04  model_time: 0.3587 (0.3587)  evaluator_time: 0.0010 (0.0010)  loss: 0.4007 (0.4007)  loss_classifier: 0.1908 (0.1908)  loss_box_reg: 0.1787 (0.1787)  loss_objectness: 0.0214 (0.0214)  loss_rpn_box_reg: 0.0097 (0.0097)  time: 0.5660  data: 0.2054  max mem: 2501
+Test:  [100/114]  eta: 0:00:05  model_time: 0.1750 (0.1855)  evaluator_time: 0.0011 (0.0009)  loss: 0.2772 (0.2757)  loss_classifier: 0.1475 (0.1375)  loss_box_reg: 0.1089 (0.1060)  loss_objectness: 0.0153 (0.0252)  loss_rpn_box_reg: 0.0052 (0.0070)  time: 0.3739  data: 0.1933  max mem: 2501
+Test:  [113/114]  eta: 0:00:00  model_time: 0.1755 (0.1851)  evaluator_time: 0.0015 (0.0010)  loss: 0.2613 (0.2762)  loss_classifier: 0.1283 (0.1373)  loss_box_reg: 0.0883 (0.1058)  loss_objectness: 0.0294 (0.0259)  loss_rpn_box_reg: 0.0077 (0.0072)  time: 0.3842  data: 0.2029  max mem: 2501
+Test: Total time: 0:00:44 (0.3868 s / it)
+Averaged stats: model_time: 0.1755 (0.1851)  evaluator_time: 0.0015 (0.0010)  loss: 0.2613 (0.2762)  loss_classifier: 0.1283 (0.1373)  loss_box_reg: 0.0883 (0.1058)  loss_objectness: 0.0294 (0.0259)  loss_rpn_box_reg: 0.0077 (0.0072)
+========================================For Training [lesion_detection - CL_Fix5Layers]========================================
+LesionDetectionArgs(name='lesion_detection', learning_rate=0.005, sgd_momentum=0.9, batch_size=4, weight_decay=0.0005, early_stopping_patience=20, warmup_epoch=0)
+REFLACXLesionDetectionDatasetArgs(image_size=128, label_cols=['Pulmonary edema', 'Enlarged cardiac silhouette', 'Consolidation', 'Atelectasis', 'Pleural abnormality'])
+FasterRCNNArgs(name='CL_Fix5Layers', weights='cl', cl_model_name='MCL_resnet50_accuracy_0_1433_epoch48_10-08-2023 15-58-25', trainable_backbone_layers=0, release_fixed_weights_after=None)
+===============================================================================================================================
+
+Best model has been saved to: [lesion_detection_CL_Fix5Layers_map_50_0_2072_mar_100_0_3192_epoch30_10-16-2023 12-34-01]
+The final model has been saved to: [lesion_detection_CL_Fix5Layers_map_50_0_1830_mar_100_0_3145_epoch50_10-16-2023 14-49-34]
+
+===============================================================================================================================
+{'map': 0.06794673204421997, 'map_50': 0.19868482649326324, 'map_75': 0.02073505148291588, 'map_small': 0.01562691293656826, 'map_medium': 0.08279593288898468, 'map_large': -1.0, 'mar_1': 0.1386108100414276, 'mar_10': 0.27955126762390137, 'mar_100': 0.3224300146102905, 'mar_small': 0.22840715944766998, 'mar_medium': 0.3681583106517792, 'mar_large': -1.0, 'map_per_class': -1.0, 'mar_100_per_class': -1.0}
+Test:  [  0/114]  eta: 0:00:46  model_time: 0.2401 (0.2401)  evaluator_time: 0.0000 (0.0000)  loss: 0.3059 (0.3059)  loss_classifier: 0.1464 (0.1464)  loss_box_reg: 0.1138 (0.1138)  loss_objectness: 0.0368 (0.0368)  loss_rpn_box_reg: 0.0089 (0.0089)  time: 0.4041  data: 0.1639  max mem: 2501
+Test:  [100/114]  eta: 0:00:04  model_time: 0.1718 (0.1804)  evaluator_time: 0.0010 (0.0009)  loss: 0.2788 (0.2662)  loss_classifier: 0.1341 (0.1286)  loss_box_reg: 0.1131 (0.0997)  loss_objectness: 0.0251 (0.0308)  loss_rpn_box_reg: 0.0058 (0.0072)  time: 0.3440  data: 0.1673  max mem: 2501
+Test:  [113/114]  eta: 0:00:00  model_time: 0.1734 (0.1797)  evaluator_time: 0.0010 (0.0009)  loss: 0.2608 (0.2683)  loss_classifier: 0.1195 (0.1292)  loss_box_reg: 0.0745 (0.0999)  loss_objectness: 0.0332 (0.0318)  loss_rpn_box_reg: 0.0089 (0.0074)  time: 0.3508  data: 0.1749  max mem: 2501
+Test: Total time: 0:00:40 (0.3523 s / it)
+Averaged stats: model_time: 0.1734 (0.1797)  evaluator_time: 0.0010 (0.0009)  loss: 0.2608 (0.2683)  loss_classifier: 0.1195 (0.1292)  loss_box_reg: 0.0745 (0.0999)  loss_objectness: 0.0332 (0.0318)  loss_rpn_box_reg: 0.0089 (0.0074)
+========================================For Training [lesion_detection - ImageNet_Fix5layers]========================================
+LesionDetectionArgs(name='lesion_detection', learning_rate=0.005, sgd_momentum=0.9, batch_size=4, weight_decay=0.0005, early_stopping_patience=20, warmup_epoch=0)
+REFLACXLesionDetectionDatasetArgs(image_size=128, label_cols=['Pulmonary edema', 'Enlarged cardiac silhouette', 'Consolidation', 'Atelectasis', 'Pleural abnormality'])
+FasterRCNNArgs(name='ImageNet_Fix5layers', weights='imagenet', cl_model_name=None, trainable_backbone_layers=0, release_fixed_weights_after=None)
+=====================================================================================================================================
+
+Best model has been saved to: [lesion_detection_ImageNet_Fix5layers_map_50_0_1294_mar_100_0_2542_epoch2_10-16-2023 14-57-44]
+The final model has been saved to: [lesion_detection_ImageNet_Fix5layers_map_50_0_1874_mar_100_0_2995_epoch22_10-16-2023 16-52-28]
+
+=====================================================================================================================================
+{'map': 0.04249822348356247, 'map_50': 0.138482466340065, 'map_75': 0.010896474123001099, 'map_small': 0.01604882813990116, 'map_medium': 0.051021791994571686, 'map_large': -1.0, 'mar_1': 0.1132112666964531, 'mar_10': 0.21850590407848358, 'mar_100': 0.259224534034729, 'mar_small': 0.13501596450805664, 'mar_medium': 0.3199182450771332, 'mar_large': -1.0, 'map_per_class': -1.0, 'mar_100_per_class': -1.0}
+Test:  [  0/114]  eta: 0:00:47  model_time: 0.2465 (0.2465)  evaluator_time: 0.0010 (0.0010)  loss: 0.3565 (0.3565)  loss_classifier: 0.1779 (0.1779)  loss_box_reg: 0.1433 (0.1433)  loss_objectness: 0.0244 (0.0244)  loss_rpn_box_reg: 0.0108 (0.0108)  time: 0.4134  data: 0.1644  max mem: 2501
+Test:  [100/114]  eta: 0:00:05  model_time: 0.1792 (0.1962)  evaluator_time: 0.0015 (0.0010)  loss: 0.2807 (0.2778)  loss_classifier: 0.1448 (0.1384)  loss_box_reg: 0.1095 (0.1046)  loss_objectness: 0.0215 (0.0275)  loss_rpn_box_reg: 0.0062 (0.0074)  time: 0.3538  data: 0.1690  max mem: 2501
+Test:  [113/114]  eta: 0:00:00  model_time: 0.1853 (0.1959)  evaluator_time: 0.0015 (0.0011)  loss: 0.2663 (0.2812)  loss_classifier: 0.1377 (0.1399)  loss_box_reg: 0.0975 (0.1057)  loss_objectness: 0.0267 (0.0280)  loss_rpn_box_reg: 0.0079 (0.0075)  time: 0.3663  data: 0.1751  max mem: 2501
+Test: Total time: 0:00:42 (0.3706 s / it)
+Averaged stats: model_time: 0.1853 (0.1959)  evaluator_time: 0.0015 (0.0011)  loss: 0.2663 (0.2812)  loss_classifier: 0.1377 (0.1399)  loss_box_reg: 0.0975 (0.1057)  loss_objectness: 0.0267 (0.0280)  loss_rpn_box_reg: 0.0079 (0.0075)
+========================================For Training [lesion_detection - Random]========================================
+LesionDetectionArgs(name='lesion_detection', learning_rate=0.005, sgd_momentum=0.9, batch_size=4, weight_decay=0.0005, early_stopping_patience=20, warmup_epoch=0)
+REFLACXLesionDetectionDatasetArgs(image_size=128, label_cols=['Pulmonary edema', 'Enlarged cardiac silhouette', 'Consolidation', 'Atelectasis', 'Pleural abnormality'])
+FasterRCNNArgs(name='Random', weights=None, cl_model_name=None, trainable_backbone_layers=5, release_fixed_weights_after=None)
+========================================================================================================================
+
+Best model has been saved to: [lesion_detection_Random_map_50_0_1230_mar_100_0_2645_epoch3_10-16-2023 17-12-51]
+The final model has been saved to: [lesion_detection_Random_map_50_0_2099_mar_100_0_3469_epoch23_10-16-2023 18-58-05]
+
+========================================================================================================================
+{'map': 0.045811980962753296, 'map_50': 0.1469825953245163, 'map_75': 0.010914324782788754, 'map_small': 0.020836230367422104, 'map_medium': 0.05647159740328789, 'map_large': -1.0, 'mar_1': 0.11470159143209457, 'mar_10': 0.24236318469047546, 'mar_100': 0.27778497338294983, 'mar_small': 0.14562425017356873, 'mar_medium': 0.34432175755500793, 'mar_large': -1.0, 'map_per_class': -1.0, 'mar_100_per_class': -1.0}

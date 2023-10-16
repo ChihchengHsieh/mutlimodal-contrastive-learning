@@ -3,13 +3,10 @@ import math
 import sys
 import time
 
-import torchvision
 import torch
-import torchvision.models.detection.mask_rcnn
 import tv_ref.utils as utils
-from tv_ref.coco_eval import CocoEvaluator
-from tv_ref.coco_utils import get_coco_api_from_dataset
 
+from torchmetrics.detection import MeanAveragePrecision
 
 def train_one_epoch(model, optimiser, data_loader, device, epoch, print_freq, scaler=None):
     model.train()
@@ -36,6 +33,11 @@ def train_one_epoch(model, optimiser, data_loader, device, epoch, print_freq, sc
         with torch.cuda.amp.autocast(enabled=scaler is not None):
             loss_dict, _ = model(images, targets)
             losses = sum(loss for loss in loss_dict.values())
+
+        # model.outputs = outputs
+        # model.targets = targets
+
+        # raise StopIteration()
 
         # reduce losses over all GPUs for logging purposes
         loss_dict_reduced = utils.reduce_dict(loss_dict)
@@ -66,16 +68,17 @@ def train_one_epoch(model, optimiser, data_loader, device, epoch, print_freq, sc
     return metric_logger
 
 
-def _get_iou_types(model):
-    model_without_ddp = model
-    if isinstance(model, torch.nn.parallel.DistributedDataParallel):
-        model_without_ddp = model.module
-    iou_types = ["bbox"]
-    if isinstance(model_without_ddp, torchvision.models.detection.MaskRCNN):
-        iou_types.append("segm")
-    if isinstance(model_without_ddp, torchvision.models.detection.KeypointRCNN):
-        iou_types.append("keypoints")
-    return iou_types
+# def _get_iou_types(model):
+#     model_without_ddp = model
+#     if isinstance(model, torch.nn.parallel.DistributedDataParallel):
+#         model_without_ddp = model.module
+#     iou_types = ["bbox"]
+#     if isinstance(model_without_ddp, torchvision.models.detection.MaskRCNN):
+#         iou_types.append("segm")
+#     if isinstance(model_without_ddp, torchvision.models.detection.KeypointRCNN):
+#         iou_types.append("keypoints")
+#     return iou_types
+
 
 
 @torch.inference_mode()
@@ -88,11 +91,11 @@ def evaluate(model, data_loader, device, return_evaluator=False):
     metric_logger = utils.MetricLogger(delimiter="  ")
     header = "Test:"
 
-    coco = get_coco_api_from_dataset(data_loader.dataset)
-    iou_types = _get_iou_types(model)
+    # coco = get_coco_api_from_dataset(data_loader.dataset)
+    # iou_types = _get_iou_types(model)
 
     if return_evaluator:
-        coco_evaluator = CocoEvaluator(coco, iou_types)
+        evaluator = MeanAveragePrecision(iou_type="bbox", box_format="xyxy")
 
     for images, targets in metric_logger.log_every(data_loader, 100, header):
         images = list(img.to(device) for img in images)
@@ -108,14 +111,18 @@ def evaluate(model, data_loader, device, return_evaluator=False):
 
         outputs = [{k: v.to(cpu_device) for k, v in t.items()}
                    for t in outputs]
+        targets = [{k: v.to(device) if isinstance(
+            v, torch.Tensor) else v for k, v in t.items()} for t in targets]
         model_time = time.time() - model_time
 
-        res = {target["image_id"]: output for target,
-               output in zip(targets, outputs)}
-
+        # res = {target["image_id"]: output for target,
+        #        output in zip(targets, outputs)}
+        
         evaluator_time = time.time()
         if return_evaluator:
-            coco_evaluator.update(res)
+            evaluator.update(outputs, targets)
+            evaluator.cpu()
+            # evaluator.update(res)
         evaluator_time = time.time() - evaluator_time
         metric_logger.update(model_time=model_time,
                              evaluator_time=evaluator_time,
@@ -126,14 +133,71 @@ def evaluate(model, data_loader, device, return_evaluator=False):
     # gather the stats from all processes
     metric_logger.synchronize_between_processes()
     print("Averaged stats:", metric_logger)
-    if return_evaluator:
-        coco_evaluator.synchronize_between_processes()
-
-        # accumulate predictions from all images
-        coco_evaluator.accumulate()
-        coco_evaluator.summarize()
+        
     torch.set_num_threads(n_threads)
     if return_evaluator:
-        return metric_logger, coco_evaluator
+        return metric_logger, evaluator
 
     return metric_logger
+
+
+
+# @torch.inference_mode()
+# def evaluate(model, data_loader, device, return_evaluator=False):
+#     n_threads = torch.get_num_threads()
+#     # FIXME remove this and make paste_masks_in_image run on the GPU
+#     torch.set_num_threads(1)
+#     cpu_device = torch.device("cpu")
+#     model.eval()
+#     metric_logger = utils.MetricLogger(delimiter="  ")
+#     header = "Test:"
+
+#     coco = get_coco_api_from_dataset(data_loader.dataset)
+#     iou_types = _get_iou_types(model)
+
+#     if return_evaluator:
+#         coco_evaluator = CocoEvaluator(coco, iou_types)
+
+#     for images, targets in metric_logger.log_every(data_loader, 100, header):
+#         images = list(img.to(device) for img in images)
+#         targets = [{k: v.to(device) if isinstance(
+#             v, torch.Tensor) else v for k, v in t.items()} for t in targets]
+#         if torch.cuda.is_available():
+#             torch.cuda.synchronize()
+#         model_time = time.time()
+#         loss_dict, outputs = model(images, targets)
+
+#         loss_dict_reduced = utils.reduce_dict(loss_dict)
+#         losses_reduced = sum(loss for loss in loss_dict_reduced.values())
+
+#         outputs = [{k: v.to(cpu_device) for k, v in t.items()}
+#                    for t in outputs]
+#         model_time = time.time() - model_time
+
+#         res = {target["image_id"]: output for target,
+#                output in zip(targets, outputs)}
+
+#         evaluator_time = time.time()
+#         if return_evaluator:
+#             coco_evaluator.update(res)
+#         evaluator_time = time.time() - evaluator_time
+#         metric_logger.update(model_time=model_time,
+#                              evaluator_time=evaluator_time,
+#                              loss=losses_reduced,
+#                              **loss_dict_reduced,
+#                              )
+
+#     # gather the stats from all processes
+#     metric_logger.synchronize_between_processes()
+#     print("Averaged stats:", metric_logger)
+#     if return_evaluator:
+#         coco_evaluator.synchronize_between_processes()
+
+#         # accumulate predictions from all images
+#         coco_evaluator.accumulate()
+#         coco_evaluator.summarize()
+#     torch.set_num_threads(n_threads)
+#     if return_evaluator:
+#         return metric_logger, coco_evaluator
+
+#     return metric_logger
