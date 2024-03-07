@@ -14,7 +14,6 @@ from .tensor import nested_to_device
 from .dict import reduce_dict
 from .checkpoint import get_model_path, save_checkpoint, remove_existing_cp
 
-
 class TrainingTimer(object):
     def __init__(self) -> None:
         self.init_t = datetime.now()
@@ -138,11 +137,11 @@ def get_datasets(
     return train_dataset, val_dataset, test_dataset
 
 
-def __collate_fn(batch):
+def collate_fn(batch):
     return tuple(zip(*batch))
 
 
-def __get_dataloader_g(seed: int = 0):
+def get_dataloader_g(seed: int = 0):
     g = torch.Generator()
     g.manual_seed(seed)
     return g
@@ -161,8 +160,8 @@ def get_dataloaders(
         train_dataset,
         batch_size=batch_size,
         shuffle=True,
-        collate_fn=__collate_fn,
-        generator=__get_dataloader_g(seed),
+        collate_fn=collate_fn,
+        generator=get_dataloader_g(seed),
         drop_last=drop_last,
     )
 
@@ -170,8 +169,8 @@ def get_dataloaders(
         val_dataset,
         batch_size=batch_size,
         shuffle=True,
-        collate_fn=__collate_fn,
-        generator=__get_dataloader_g(seed),
+        collate_fn=collate_fn,
+        generator=get_dataloader_g(seed),
         drop_last=drop_last,
     )
 
@@ -180,8 +179,8 @@ def get_dataloaders(
             test_dataset,
             batch_size=batch_size,
             shuffle=True,
-            collate_fn=__collate_fn,
-            generator=__get_dataloader_g(seed),
+            collate_fn=collate_fn,
+            generator=get_dataloader_g(seed),
             drop_last=drop_last,  # if we don't make it == True, we may get a batch with only size=1
         )
         return train_dataloader, val_dataloader, test_dataloader

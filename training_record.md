@@ -449,3 +449,89 @@ The final model has been saved to: [lesion_detection_Random_map_50_0_2099_mar_10
 
 ========================================================================================================================
 {'map': 0.045811980962753296, 'map_50': 0.1469825953245163, 'map_75': 0.010914324782788754, 'map_small': 0.020836230367422104, 'map_medium': 0.05647159740328789, 'map_large': -1.0, 'mar_1': 0.11470159143209457, 'mar_10': 0.24236318469047546, 'mar_100': 0.27778497338294983, 'mar_small': 0.14562425017356873, 'mar_medium': 0.34432175755500793, 'mar_large': -1.0, 'map_per_class': -1.0, 'mar_100_per_class': -1.0}
+
+
+
+
+
+
+#### DETR
+
+Test:  [  0/114]  eta: 0:00:23  loss: 13.0290 (13.0290)  time: 0.2088  data: 0.1838  max mem: 477
+Test:  [ 10/114]  eta: 0:00:22  loss: 14.8152 (13.9087)  time: 0.2149  data: 0.1905  max mem: 477
+Test:  [ 20/114]  eta: 0:00:19  loss: 12.5311 (12.3251)  time: 0.2119  data: 0.1865  max mem: 477
+Test:  [ 30/114]  eta: 0:00:17  loss: 11.2365 (12.3277)  time: 0.2060  data: 0.1800  max mem: 477
+Test:  [ 40/114]  eta: 0:00:15  loss: 11.8390 (12.2564)  time: 0.2054  data: 0.1798  max mem: 477
+Test:  [ 50/114]  eta: 0:00:13  loss: 10.8709 (11.8927)  time: 0.2057  data: 0.1803  max mem: 477
+Test:  [ 60/114]  eta: 0:00:11  loss: 12.6689 (11.9114)  time: 0.2082  data: 0.1828  max mem: 477
+Test:  [ 70/114]  eta: 0:00:09  loss: 12.5734 (11.9755)  time: 0.2072  data: 0.1821  max mem: 477
+Test:  [ 80/114]  eta: 0:00:07  loss: 11.5433 (11.8154)  time: 0.2099  data: 0.1845  max mem: 477
+Test:  [ 90/114]  eta: 0:00:05  loss: 11.8797 (11.8816)  time: 0.2117  data: 0.1857  max mem: 477
+Test:  [100/114]  eta: 0:00:02  loss: 12.3338 (11.8880)  time: 0.2045  data: 0.1791  max mem: 477
+Test:  [110/114]  eta: 0:00:00  loss: 12.2471 (11.9685)  time: 0.2054  data: 0.1800  max mem: 477
+Test:  [113/114]  eta: 0:00:00  loss: 12.9312 (11.9011)  time: 0.2056  data: 0.1801  max mem: 477
+Test: Total time: 0:00:23 (0.2078 s / it)
+Averaged stats: loss: 12.9312 (11.9011)
+========================================For Training [lesion_detection - CL_NoFix]========================================
+LesionDetectionArgs(name='lesion_detection', learning_rate=0.0001, sgd_momentum=0.9, batch_size=4, weight_decay=0.0001, early_stopping_patience=20, warmup_epoch=0)
+REFLACXLesionDetectionDatasetArgs(image_size=128, label_cols=['Pulmonary edema', 'Enlarged cardiac silhouette', 'Consolidation', 'Atelectasis', 'Pleural abnormality'])
+DETRArgs(name='CL_NoFix', weights='cl', cl_model_name='MCL_resnet50_accuracy_0_1433_epoch48_10-08-2023 15-58-25', trainable_backbone_layers=5, release_fixed_weights_after=None, hidden_dim=32, dilation=False, position_embedding='sine', dropout=0.1, nheads=4, dim_feedforward=64, enc_layers=3, dec_layers=3, pre_norm=False, num_queries=100, aux_loss=True, set_cost_class=1, set_cost_bbox=5, set_cost_giou=2, giou_loss_coef=2, bbox_loss_coef=5, eos_coef=0.1)
+==========================================================================================================================
+
+Best model has been saved to: [lesion_detection_CL_NoFix_map_50_0_0006_mar_100_0_0267_epoch30_10-17-2023 08-19-39]
+The final model has been saved to: [lesion_detection_CL_NoFix_map_50_0_0062_mar_100_0_0481_epoch50_10-17-2023 09-07-23]
+
+==========================================================================================================================
+{'map': 0.0002875025093089789, 'map_50': 0.0010762253077700734, 'map_75': 0.0001451256248401478, 'map_small': 0.0002875025093089789, 'map_medium': -1.0, 'map_large': -1.0, 'mar_1': 0.010582302697002888, 'mar_10': 0.021824738010764122, 'mar_100': 0.03280381113290787, 'mar_small': 0.03280381113290787, 'mar_medium': -1.0, 'mar_large': -1.0, 'map_per_class': -1.0, 'mar_100_per_class': -1.0}
+Test:  [  0/114]  eta: 0:00:20  loss: 16.3449 (16.3449)  time: 0.1791  data: 0.1535  max mem: 477
+Test:  [ 10/114]  eta: 0:00:19  loss: 17.4528 (17.2904)  time: 0.1837  data: 0.1615  max mem: 477
+Test:  [ 20/114]  eta: 0:00:17  loss: 15.9837 (16.3381)  time: 0.1828  data: 0.1593  max mem: 477
+Test:  [ 30/114]  eta: 0:00:15  loss: 15.9180 (16.2206)  time: 0.1810  data: 0.1558  max mem: 477
+Test:  [ 40/114]  eta: 0:00:13  loss: 17.1826 (16.7320)  time: 0.1812  data: 0.1559  max mem: 477
+Test:  [ 50/114]  eta: 0:00:11  loss: 17.5904 (16.4389)  time: 0.1817  data: 0.1565  max mem: 477
+Test:  [ 60/114]  eta: 0:00:09  loss: 16.4581 (16.1274)  time: 0.1860  data: 0.1607  max mem: 477
+Test:  [ 70/114]  eta: 0:00:08  loss: 16.3554 (16.0639)  time: 0.1871  data: 0.1614  max mem: 477
+Test:  [ 80/114]  eta: 0:00:06  loss: 16.2142 (15.8768)  time: 0.1896  data: 0.1634  max mem: 477
+Test:  [ 90/114]  eta: 0:00:04  loss: 16.1076 (15.9183)  time: 0.1875  data: 0.1617  max mem: 477
+Test:  [100/114]  eta: 0:00:02  loss: 16.2126 (15.9549)  time: 0.1820  data: 0.1567  max mem: 477
+Test:  [110/114]  eta: 0:00:00  loss: 16.0553 (16.0633)  time: 0.1876  data: 0.1617  max mem: 477
+Test:  [113/114]  eta: 0:00:00  loss: 16.0553 (16.0466)  time: 0.1889  data: 0.1628  max mem: 477
+Test: Total time: 0:00:21 (0.1849 s / it)
+Averaged stats: loss: 16.0553 (16.0466)
+========================================For Training [lesion_detection - CL_Fix5Layers]========================================
+LesionDetectionArgs(name='lesion_detection', learning_rate=0.0001, sgd_momentum=0.9, batch_size=4, weight_decay=0.0001, early_stopping_patience=20, warmup_epoch=0)
+REFLACXLesionDetectionDatasetArgs(image_size=128, label_cols=['Pulmonary edema', 'Enlarged cardiac silhouette', 'Consolidation', 'Atelectasis', 'Pleural abnormality'])
+DETRArgs(name='CL_Fix5Layers', weights='cl', cl_model_name='MCL_resnet50_accuracy_0_1433_epoch48_10-08-2023 15-58-25', trainable_backbone_layers=0, release_fixed_weights_after=None, hidden_dim=32, dilation=False, position_embedding='sine', dropout=0.1, nheads=4, dim_feedforward=64, enc_layers=3, dec_layers=3, pre_norm=False, num_queries=100, aux_loss=True, set_cost_class=1, set_cost_bbox=5, set_cost_giou=2, giou_loss_coef=2, bbox_loss_coef=5, eos_coef=0.1)
+===============================================================================================================================
+
+Best model has been saved to: [lesion_detection_CL_Fix5Layers_map_50_0_0000_mar_100_0_0012_epoch30_10-17-2023 10-11-43]
+The final model has been saved to: [lesion_detection_CL_Fix5Layers_map_50_0_0000_mar_100_0_0064_epoch50_10-17-2023 10-54-39]
+
+===============================================================================================================================
+{'map': 3.3370308756275335e-06, 'map_50': 1.786428583727684e-05, 'map_75': 0.0, 'map_small': 3.3370308756275335e-06, 'map_medium': -1.0, 'map_large': -1.0, 'mar_1': 0.0016735185636207461, 'mar_10': 0.001896077417768538, 'mar_100': 0.002349850023165345, 'mar_small': 0.002349850023165345, 'mar_medium': -1.0, 'mar_large': -1.0, 'map_per_class': -1.0, 'mar_100_per_class': -1.0}
+Test:  [  0/114]  eta: 0:00:20  loss: 11.2902 (11.2902)  time: 0.1828  data: 0.1528  max mem: 479
+Test:  [ 10/114]  eta: 0:00:19  loss: 15.7460 (14.9923)  time: 0.1881  data: 0.1622  max mem: 479
+Test:  [ 20/114]  eta: 0:00:17  loss: 14.6711 (13.4482)  time: 0.1859  data: 0.1603  max mem: 479
+Test:  [ 30/114]  eta: 0:00:15  loss: 12.7380 (13.5047)  time: 0.1826  data: 0.1566  max mem: 479
+Test:  [ 40/114]  eta: 0:00:13  loss: 14.2343 (13.7000)  time: 0.1826  data: 0.1566  max mem: 479
+Test:  [ 50/114]  eta: 0:00:11  loss: 13.8720 (13.3164)  time: 0.1827  data: 0.1571  max mem: 479
+Test:  [ 60/114]  eta: 0:00:09  loss: 12.7376 (13.2213)  time: 0.1861  data: 0.1606  max mem: 479
+Test:  [ 70/114]  eta: 0:00:08  loss: 13.5683 (13.0699)  time: 0.1868  data: 0.1612  max mem: 479
+Test:  [ 80/114]  eta: 0:00:06  loss: 13.0450 (12.9387)  time: 0.1891  data: 0.1635  max mem: 479
+Test:  [ 90/114]  eta: 0:00:04  loss: 13.5892 (13.1047)  time: 0.1878  data: 0.1617  max mem: 479
+Test:  [100/114]  eta: 0:00:02  loss: 14.5197 (13.1093)  time: 0.1839  data: 0.1576  max mem: 479
+Test:  [110/114]  eta: 0:00:00  loss: 14.0699 (13.2021)  time: 0.1900  data: 0.1636  max mem: 479
+Test:  [113/114]  eta: 0:00:00  loss: 14.3609 (13.1645)  time: 0.1910  data: 0.1647  max mem: 479
+Test: Total time: 0:00:21 (0.1862 s / it)
+Averaged stats: loss: 14.3609 (13.1645)
+========================================For Training [lesion_detection - CL_Fix2Layers]========================================
+LesionDetectionArgs(name='lesion_detection', learning_rate=0.0001, sgd_momentum=0.9, batch_size=4, weight_decay=0.0001, early_stopping_patience=20, warmup_epoch=0)
+REFLACXLesionDetectionDatasetArgs(image_size=128, label_cols=['Pulmonary edema', 'Enlarged cardiac silhouette', 'Consolidation', 'Atelectasis', 'Pleural abnormality'])
+DETRArgs(name='CL_Fix2Layers', weights='cl', cl_model_name='MCL_resnet50_accuracy_0_1433_epoch48_10-08-2023 15-58-25', trainable_backbone_layers=3, release_fixed_weights_after=None, hidden_dim=32, dilation=False, position_embedding='sine', dropout=0.1, nheads=4, dim_feedforward=64, enc_layers=3, dec_layers=3, pre_norm=False, num_queries=100, aux_loss=True, set_cost_class=1, set_cost_bbox=5, set_cost_giou=2, giou_loss_coef=2, bbox_loss_coef=5, eos_coef=0.1)
+===============================================================================================================================
+
+Best model has been saved to: [lesion_detection_CL_Fix2Layers_map_50_0_0011_mar_100_0_0144_epoch30_10-17-2023 12-01-35]
+The final model has been saved to: [lesion_detection_CL_Fix2Layers_map_50_0_0004_mar_100_0_0122_epoch50_10-17-2023 12-46-12]
+
+===============================================================================================================================
+{'map': 1.8018314221990295e-05, 'map_50': 8.349610288860276e-05, 'map_75': 5.908955699851504e-06, 'map_small': 1.8018314221990295e-05, 'map_medium': -1.0, 'map_large': -1.0, 'mar_1': 0.006549410987645388, 'mar_10': 0.008864641189575195, 'mar_100': 0.012798367999494076, 'mar_small': 0.012798367999494076, 'mar_medium': -1.0, 'mar_large': -1.0, 'map_per_class': -1.0, 'mar_100_per_class': -1.0}

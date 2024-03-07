@@ -41,7 +41,7 @@ class DETRArgs:
     trainable_backbone_layers: int = 5  # [0, 5]
     release_fixed_weights_after: int = None
 
-    
+    ### Loss is not going down using this with fixed weights.
     hidden_dim: int = 32
     dilation: bool = False
     position_embedding: str = "sine"

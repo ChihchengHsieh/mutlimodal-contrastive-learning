@@ -13,7 +13,7 @@ class PhysioNetClinicalDatasetArgs:
             "o2sat",
             "sbp",
             "dbp",
-            # "pain",
+            "pain",
             "acuity",
         ]
     )

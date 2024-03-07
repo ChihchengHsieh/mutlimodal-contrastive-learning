@@ -42,3 +42,32 @@ def plot_losses(
     subplots[-1].set_xlabel("Epoch")
     plt.plot()
     plt.pause(0.01)
+
+
+
+def plot_train(train_perf, val_perf=None, title=None):
+    fig, subplot = plt.subplots(
+        1,
+        figsize=(10, 5),
+        dpi=80,
+        sharex=True,
+    )
+
+    if title:
+        subplot.set_title(title)
+
+    subplot.plot(
+        train_perf,
+        marker="o",
+        label="train",
+        color="steelblue",
+    )
+    
+    if val_perf:
+        subplot.plot(val_perf, marker="o", label="val", color="orange")
+
+    subplot.legend(loc="upper left")
+    subplot.set_xlabel("Epoch")
+
+    plt.plot()
+    plt.pause(0.01)

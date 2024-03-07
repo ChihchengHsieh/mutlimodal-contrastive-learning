@@ -42,6 +42,15 @@ def train_one_epoch(
 
     model.metric_logger = metric_logger
 
+    lr_scheduler = None
+    if epoch == 1:
+        warmup_factor = 1.0 / 1000
+        warmup_iters = min(1000, len(data_loader) - 1)
+        lr_scheduler = torch.optim.lr_scheduler.LinearLR(
+            optimizer, start_factor=warmup_factor, total_iters=warmup_iters
+        )
+
+
     for images, targets in metric_logger.log_every(data_loader, print_freq, header):
         images = list(image.to(device) for image in images)
         # images = images.to(device)
@@ -99,6 +108,9 @@ def train_one_epoch(
         if max_norm > 0:
             torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm)
         optimizer.step()
+
+        if lr_scheduler is not None:
+            lr_scheduler.step()
 
         metric_logger.update(
             loss=loss_value,
