@@ -131,25 +131,6 @@ class TabularDecoder(nn.Module):
         return self.out_layer(self.layers(x))
 
 
-class MixtralBLockSparseTop2MLP(nn.Module):
-    def __init__(self, dim, intermediate_factor=3.5):
-        super().__init__()
-        self.dim = dim
-        self.ffn_dim = math.ceil(dim * intermediate_factor)
-
-        self.w1 = nn.Linear(self.dim, self.ffn_dim, bias=False)
-        self.w2 = nn.Linear(self.ffn_dim, self.dim, bias=False)
-        self.w3 = nn.Linear(self.dim, self.ffn_dim, bias=False)
-        self.act_fn = nn.SiLU()
-
-    def forward(self, hidden_states):
-        current_hidden_states = self.act_fn(self.w1(hidden_states)) * self.w3(
-            hidden_states
-        )
-        current_hidden_states = self.w2(current_hidden_states)
-        return current_hidden_states
-
-
 from lightly.models.modules import SimCLRProjectionHead
 
 
@@ -210,15 +191,15 @@ class OurApproachAlt(nn.Module):
 
         DEFAULT_AUG = T.Compose(
             [
+                T.RandomResizedCrop(image_size, scale=(0.2, 1.0)),
                 T.RandomApply(
-                    [T.ColorJitter(0.8, 0.8, 0.8, 0.2)], p=0.8  # not strengthened
+                    [T.ColorJitter(0.4, 0.4, 0.4, 0.1)], p=0.8  # not strengthened
                 ),
                 T.RandomGrayscale(p=0.2),
+                T.RandomApply([T.GaussianBlur((3, 3), [0.1, 2.0])], p=0.5),
                 T.RandomHorizontalFlip(),
-                T.RandomApply([T.GaussianBlur((3, 3), [1.5, 1.5])], p=0.1),
                 # T.ToTensor(),
-                # T.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-                T.RandomResizedCrop(image_size),
+                T.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
             ]
         )
         self.augment1 = default(augment_fn, DEFAULT_AUG)
@@ -295,7 +276,12 @@ class OurApproachAlt(nn.Module):
             self.tab_dec(self.tab_enc(F.dropout(tab, p=self.tab_drop_p))),
         )
 
-        hi1, hi2, hi3 = self.img_enc(i1), self.img_enc(i2), self.img_enc(i3)
+        hi1, hi2, hi3, hi4 = (
+            self.img_enc(i1),
+            self.img_enc(i2),
+            self.img_enc(i3),
+            self.img_enc(img),
+        )
         ht1, ht2, ht3, ht4 = (
             self.tab_enc(t1),
             self.tab_enc(t2),
@@ -303,11 +289,13 @@ class OurApproachAlt(nn.Module):
             self.tab_enc(tab),
         )
 
-        zi1, zi2, zi3 = (
+        zi1, zi2, zi3, zi4 = (
             self.img_pj(hi1),
             self.img_pj(hi2),
             self.cross_img_pj(hi3),
+            self.cross_img_pj(hi4),
         )
+
         zt1, zt2, zt3, zt4 = (
             self.tab_pj(ht1),
             self.tab_pj(ht2),
@@ -317,13 +305,12 @@ class OurApproachAlt(nn.Module):
 
         li = self.ci * self.img_loss(zi1, zi2)
         lt = self.ct * self.tab_loss(zt1, zt2)
-        lc = self.cit * self.cross_loss(zi3, zt3)
-        lc2 = self.cit * self.cross_loss(zi3, zt4)
+        lc = self.cit * (self.cross_loss(zi3, zt3) * self.cross_loss(zi4, zt4)) / 2
 
         lauto = self.cauto * (
             self.auto_loss(tab, t1) + self.auto_loss(tab, t2) + self.auto_loss(tab, t3)
         )
 
-        loss = (li + lt + lc + lc2 + lauto) / 5
+        loss = (li + lt + lc + lauto) / 4
 
         return loss

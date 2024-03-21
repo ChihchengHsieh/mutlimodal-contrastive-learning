@@ -188,6 +188,11 @@ class AutoEncoderLoss(nn.Module):
 
 
 class OurImproved_v2(nn.Module):
+    '''
+    What did we want to change here? (v2):
+
+    1. only using dropout for augmentation, and auto-encoder is not applied.
+    '''
     def __init__(
         self,
         base_encoder,

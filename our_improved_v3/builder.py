@@ -148,41 +148,10 @@ class MixtralBLockSparseTop2MLP(nn.Module):
 from lightly.models.modules import SimCLRProjectionHead
 
 
-class AutoEncoderLoss(nn.Module):
-    def __init__(self, n_cat_features, c=1) -> None:
-        super().__init__()
-        self.n_cat_features = n_cat_features
-        self.mse = nn.MSELoss(reduction="mean")
-        self.bce = nn.BCEWithLogitsLoss(reduction="mean")
-        self.c = c
-
-    def forward(self, x, y):
-        """
-        x: (B, D)
-        y: (B, D)
-        """
-
-        if self.n_cat_features > 0:
-            num_x, num_y = x[:, : -self.n_cat_features], y[:, : -self.n_cat_features]
-            cat_x, cat_y = x[:, -self.n_cat_features :], y[:, -self.n_cat_features :]
-        else:
-            num_x, num_y = x, y
-            cat_x = cat_y = None
-
-        if not cat_x is None and not cat_y is None:
-            cat_loss = self.bce(cat_y, cat_x)
-        else:
-            cat_loss = 0
-
-        if num_x.shape[1] > 0 and num_y.shape[1] > 0:
-            num_loss = self.mse(num_y, num_x)
-        else:
-            num_loss = 0
-
-        return self.c * cat_loss + num_loss
-
-
 class AutoEncoderLoss_v2(nn.Module):
+    '''
+    Without sigmoid for BCELoss
+    '''
     def __init__(self, n_cat_features, c=1) -> None:
         super().__init__()
         self.n_cat_features = n_cat_features
@@ -240,14 +209,21 @@ class TabAutoEncoder(nn.Module):
         return out
 
 
-class OurImproved(nn.Module):
-    '''
+class OurImproved_v3(nn.Module):
+    """
     From alt->improve
-    
+
     change the tab_enc, tab_dec -> tab_auto (adding sigmoid for categorical data)
 
+    What we now from the result of v1 and alt.
 
-    '''
+    1. let's use the same augmentation of image for all the algorithm.
+    2. use the default project head
+
+
+
+    """
+
     def __init__(
         self,
         base_encoder,
@@ -266,19 +242,19 @@ class OurImproved(nn.Module):
         cit=1,
         c_auto=1,
     ):
-        super(OurImproved, self).__init__()
+        super(OurImproved_v3, self).__init__()
 
         DEFAULT_AUG = T.Compose(
             [
+                T.RandomResizedCrop(image_size, scale=(0.2, 1.0)),
                 T.RandomApply(
-                    [T.ColorJitter(0.8, 0.8, 0.8, 0.2)], p=0.8  # not strengthened
+                    [T.ColorJitter(0.4, 0.4, 0.4, 0.1)], p=0.8  # not strengthened
                 ),
                 T.RandomGrayscale(p=0.2),
+                T.RandomApply([T.GaussianBlur((3, 3), [0.1, 2.0])], p=0.5),
                 T.RandomHorizontalFlip(),
-                T.RandomApply([T.GaussianBlur((3, 3), [1.5, 1.5])], p=0.1),
                 # T.ToTensor(),
-                # T.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-                T.RandomResizedCrop((image_size, image_size)),
+                T.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
             ]
         )
         self.augment1 = default(augment_fn, DEFAULT_AUG)
@@ -295,14 +271,11 @@ class OurImproved(nn.Module):
 
         self.img_enc.fc = nn.Linear(self.img_enc.fc.weight.shape[1], dim)
 
-        # self.tab_emb = nn.Linear(clinical_input_dim, dim)
-
         self.tab_auto = TabAutoEncoder(
             input_dim=clinical_input_dim,
             dim=dim,
             n_tab_layers=n_tab_layers,
         )
-
 
         self.img_pj = SimCLRProjectionHead(
             dim,

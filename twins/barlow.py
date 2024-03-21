@@ -87,7 +87,7 @@ class BarlowTwins(nn.Module):
         latent_id,
         projection_sizes,
         lambd,
-        # image_size,
+        image_size,
         scale_factor=1,
         augment_fn=None,
         augment_fn2=None,
@@ -104,7 +104,7 @@ class BarlowTwins(nn.Module):
 
         DEFAULT_AUG = T.Compose(
             [
-                T.RandomResizedCrop(224, scale=(0.2, 1.0)),
+                T.RandomResizedCrop(image_size, scale=(0.2, 1.0)),
                 T.RandomApply(
                     [T.ColorJitter(0.4, 0.4, 0.4, 0.1)], p=0.8  # not strengthened
                 ),

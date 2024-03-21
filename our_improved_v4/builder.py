@@ -148,41 +148,11 @@ class MixtralBLockSparseTop2MLP(nn.Module):
 from lightly.models.modules import SimCLRProjectionHead
 
 
-class AutoEncoderLoss(nn.Module):
-    def __init__(self, n_cat_features, c=1) -> None:
-        super().__init__()
-        self.n_cat_features = n_cat_features
-        self.mse = nn.MSELoss(reduction="mean")
-        self.bce = nn.BCEWithLogitsLoss(reduction="mean")
-        self.c = c
-
-    def forward(self, x, y):
-        """
-        x: (B, D)
-        y: (B, D)
-        """
-
-        if self.n_cat_features > 0:
-            num_x, num_y = x[:, : -self.n_cat_features], y[:, : -self.n_cat_features]
-            cat_x, cat_y = x[:, -self.n_cat_features :], y[:, -self.n_cat_features :]
-        else:
-            num_x, num_y = x, y
-            cat_x = cat_y = None
-
-        if not cat_x is None and not cat_y is None:
-            cat_loss = self.bce(cat_y, cat_x)
-        else:
-            cat_loss = 0
-
-        if num_x.shape[1] > 0 and num_y.shape[1] > 0:
-            num_loss = self.mse(num_y, num_x)
-        else:
-            num_loss = 0
-
-        return self.c * cat_loss + num_loss
-
-
 class AutoEncoderLoss_v2(nn.Module):
+    """
+    Without sigmoid for BCELoss
+    """
+
     def __init__(self, n_cat_features, c=1) -> None:
         super().__init__()
         self.n_cat_features = n_cat_features
@@ -240,14 +210,23 @@ class TabAutoEncoder(nn.Module):
         return out
 
 
-class OurImproved(nn.Module):
-    '''
+class OurImproved_v4(nn.Module):
+    """
     From alt->improve
-    
+
     change the tab_enc, tab_dec -> tab_auto (adding sigmoid for categorical data)
 
+    What we now from the result of v1 and alt.
 
-    '''
+    1. let's use the same augmentation of image for all the algorithm.
+    2. use the default project head
+
+    ## v4:
+    Mimicking alt version.
+
+
+    """
+
     def __init__(
         self,
         base_encoder,
@@ -266,19 +245,19 @@ class OurImproved(nn.Module):
         cit=1,
         c_auto=1,
     ):
-        super(OurImproved, self).__init__()
+        super(OurImproved_v4, self).__init__()
 
         DEFAULT_AUG = T.Compose(
             [
+                T.RandomResizedCrop(image_size, scale=(0.2, 1.0)),
                 T.RandomApply(
-                    [T.ColorJitter(0.8, 0.8, 0.8, 0.2)], p=0.8  # not strengthened
+                    [T.ColorJitter(0.4, 0.4, 0.4, 0.1)], p=0.8  # not strengthened
                 ),
                 T.RandomGrayscale(p=0.2),
+                T.RandomApply([T.GaussianBlur((3, 3), [0.1, 2.0])], p=0.5),
                 T.RandomHorizontalFlip(),
-                T.RandomApply([T.GaussianBlur((3, 3), [1.5, 1.5])], p=0.1),
                 # T.ToTensor(),
-                # T.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-                T.RandomResizedCrop((image_size, image_size)),
+                T.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
             ]
         )
         self.augment1 = default(augment_fn, DEFAULT_AUG)
@@ -295,14 +274,11 @@ class OurImproved(nn.Module):
 
         self.img_enc.fc = nn.Linear(self.img_enc.fc.weight.shape[1], dim)
 
-        # self.tab_emb = nn.Linear(clinical_input_dim, dim)
-
         self.tab_auto = TabAutoEncoder(
             input_dim=clinical_input_dim,
             dim=dim,
             n_tab_layers=n_tab_layers,
         )
-
 
         self.img_pj = SimCLRProjectionHead(
             dim,
@@ -337,43 +313,47 @@ class OurImproved(nn.Module):
         self.tab_drop_p = tab_drop_p
 
     def forward(self, img, tab):
-        i1, i2 = (
-            self.augment1(img),
-            self.augment2(img),
-        )
+        i1, i2, i3 = (self.augment1(img), self.augment2(img), self.augment3(img))
 
-        t1, t2 = (
+        t1, t2, t3 = (
+            self.tab_auto(F.dropout(tab, p=self.tab_drop_p)),
             self.tab_auto(F.dropout(tab, p=self.tab_drop_p)),
             self.tab_auto(F.dropout(tab, p=self.tab_drop_p)),
         )
 
-        hi1, hi2, hio = (
+        hi1, hi2, hi3, hio = (
             self.img_enc(i1),
             self.img_enc(i2),
+            self.img_enc(i3),
             self.img_enc(img),
         )
 
-        ht1, ht2, hto = (
+        ht1, ht2, ht3, hto = (
             self.tab_auto.enc(t1),
             self.tab_auto.enc(t2),
+            self.tab_auto.enc(t3),
             self.tab_auto.enc(tab),
         )
 
-        zi1, zi2, zio = (
+        zi1, zi2, zi3, zio = (
             self.img_pj(hi1),
             self.img_pj(hi2),
+            self.img_pj(hi3),
             self.cross_img_pj(hio),
         )
-        zt1, zt2, zto = (
+        zt1, zt2, zt3, zto = (
             self.tab_pj(ht1),
             self.tab_pj(ht2),
+            self.tab_pj(ht3),
             self.cross_tab_pj(hto),
         )
 
         li = self.ci * self.img_loss(zi1, zi2)
         lt = self.ct * self.tab_loss(zt1, zt2)
-        lc = self.cit * self.cross_loss(zio, zto)
-        l_auto = self.c_auto * (self.auto_loss(tab, t1) + self.auto_loss(tab, t2))
+        lc = self.cit * ((self.cross_loss(zio, zto) + self.cross_loss(zi3, zt3)) / 2)
+        l_auto = self.c_auto * (
+            self.auto_loss(tab, t1) + self.auto_loss(tab, t2) + self.auto_loss(tab, t3)
+        )
         loss = (li + lt + lc + l_auto) / 4
 
         return loss, {
