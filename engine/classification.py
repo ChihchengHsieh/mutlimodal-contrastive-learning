@@ -108,12 +108,4 @@ class ClassificationEvaluator:
             "accuracy": self.get_clf_score(accuracy_score, has_threshold=0.5),
             "recall": self.get_clf_score(recall_score, has_threshold=0.5),
             "auc": self.get_clf_score(roc_auc_score, has_threshold=0.5),
-            "top-1-acc": accuracy(
-                torch.tensor(self.preds),
-                torch.tensor(self.gts),
-                task="multilabel",
-                # num_classes=3,
-                top_k=1,
-                num_labels=14,
-            ),
         }

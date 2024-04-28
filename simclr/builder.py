@@ -16,13 +16,20 @@ class SimCLRLoss(nn.Module):
         super().__init__(*args, **kwargs)
         self.temperature = temperature
 
-    def forward(self, x1, x2):
-        x1, x2 = nn.functional.normalize(x1, dim=1), nn.functional.normalize(x2, dim=1)
-        b, device = x1.shape[0], x1.device
-        logits = x1 @ x2.t()
-        logits = logits - logits.max(dim=-1, keepdim=True).values
+    def forward(self, queries, keys):
+        b, device = queries.shape[0], queries.device
+        n = b * 2
+        projs = torch.cat((queries, keys))
+        logits = projs @ projs.t()
+
+        mask = torch.eye(n, device=device).bool()
+        logits = logits[~mask].reshape(n, n - 1)
         logits /= self.temperature
-        return F.cross_entropy(logits, torch.arange(b, device=device))
+
+        labels = torch.cat(((torch.arange(b, device=device) + b - 1), torch.arange(b, device=device)), dim=0)
+        loss = F.cross_entropy(logits, labels, reduction='sum')
+        loss /= n
+        return loss
 
 
 class RMSNorm(torch.nn.Module):

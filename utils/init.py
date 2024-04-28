@@ -15,6 +15,7 @@ def clean_memory_get_device() -> str:
     return device
 
 def reproducibility(seed: int = 0):
+    # fix it, this code can cause kernel crash sometimes.
     torch.manual_seed(seed)
     random.seed(seed)
     np.random.seed(seed)

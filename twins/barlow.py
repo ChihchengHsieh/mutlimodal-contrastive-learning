@@ -142,12 +142,12 @@ class BarlowTwins(nn.Module):
 
         z1 = self.backbone(x1)
         z2 = self.backbone(x2)
-        z1 = self.projector(z1)
-        z2 = self.projector(z2)
+        z1 = self.projector(z1) # (B, D)
+        z2 = self.projector(z2) # (B, D)
 
         # empirical cross-correlation matrix
-        c = torch.mm(self.bn(z1).T, self.bn(z2))
-        c.div_(z1.shape[0])
+        c = torch.mm(self.bn(z1).T, self.bn(z2)) #(DB*BD = DD)
+        c.div_(z1.shape[0]) 
 
         # use --scale-loss to multiply the loss by a constant factor
         # see the Issues section of the readme

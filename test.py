@@ -1,0 +1,1 @@
+from torchmetrics.detection import MeanAveragePrecision

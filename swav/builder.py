@@ -47,21 +47,6 @@ class CLIPLoss(nn.Module):
         loss = loss_0 + loss_1
         return loss  # , logits
 
-
-class SimCLRLoss(nn.Module):
-    def __init__(self, temperature=0.1, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
-        self.temperature = temperature
-
-    def forward(self, x1, x2):
-        x1, x2 = nn.functional.normalize(x1, dim=1), nn.functional.normalize(x2, dim=1)
-        b, device = x1.shape[0], x1.device
-        logits = x1 @ x2.t()
-        logits = logits - logits.max(dim=-1, keepdim=True).values
-        logits /= self.temperature
-        return F.cross_entropy(logits, torch.arange(b, device=device))
-
-
 class RMSNorm(torch.nn.Module):
     def __init__(self, dim: int, eps: float = 1e-6):
         super().__init__()
@@ -395,32 +380,6 @@ class SwAV(nn.Module):
 
         nmb_prototypes = 3000
         self.prototypes = nn.Linear(output_dim, nmb_prototypes, bias=False)
-
-        # self.tab_pj = SimCLRProjectionHead(
-        #     dim,
-        #     dim,
-        #     pred_dim,
-        # )
-
-        # self.cross_img_pj = SimCLRProjectionHead(
-        #     dim,
-        #     dim,
-        #     pred_dim,
-        # )
-
-        # self.cross_tab_pj = SimCLRProjectionHead(
-        #     dim,
-        #     dim,
-        #     pred_dim,
-        # )
-
-        # self.cross_loss = CLIPLoss(temperature=0.1, lambda_0=0.5)
-        # self.img_loss = SimCLRLoss(temperature=0.1)
-        # self.tab_loss = SimCLRLoss(temperature=0.1)
-        # self.auto_loss = AutoEncoderLoss_v2(n_cat_features)
-
-        # self.ci, self.ct, self.cit, self.c_auto = ci, ct, cit, c_auto
-        # self.tab_drop_p = tab_drop_p
 
     @torch.no_grad()
     def normalize_prototypes(

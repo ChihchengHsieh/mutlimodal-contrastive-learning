@@ -71,3 +71,5 @@ def plot_train(train_perf, val_perf=None, title=None):
 
     plt.plot()
     plt.pause(0.01)
+
+    return fig

@@ -32,7 +32,7 @@ DEFAULT_MIMIC_CLINICAL_NUM_COLS: list[str] = [
     "o2sat",
     "sbp",
     "dbp",
-    "pain",
+    # "pain",
     "acuity",
 ]
 
@@ -46,6 +46,10 @@ def get_number(x):
         return None
 
 
+def map_to_deviation_edge(x, deviation=1):
+    return deviation if x else (-1) * deviation
+
+
 class PhysioNetClinicalDataset(torch.utils.data.Dataset):
     def __init__(
         self,
@@ -57,6 +61,7 @@ class PhysioNetClinicalDataset(torch.utils.data.Dataset):
         image_size: int = 128,
         normalise_clinical_num: bool = True,
         resize: bool = False,
+        cat_ohe=False,
     ):
         self.df_path = df_path
         self.physionet_path = physionet_path
@@ -66,11 +71,12 @@ class PhysioNetClinicalDataset(torch.utils.data.Dataset):
         self.normalise_clinical_num = normalise_clinical_num
         self.split_str = split_str
         self.resize = resize
+        self.cat_ohe = cat_ohe
         # self.use_aug = self.split_str == "train" and use_aug
 
         self.df = pd.read_csv(self.df_path)
-        self.df["pain"] = self.df["pain"].apply(get_number)
-        self.df = self.df[~self.df["pain"].isna()]
+        # self.df["pain"] = self.df["pain"].apply(get_number)
+        # self.df = self.df[~self.df["pain"].isna()]
 
         # before splitting the dataset, we first calculate the mean and std values on the training dataset.
         self.mean_std_map = {f: {} for f in self.clinical_numerical_cols}
@@ -99,13 +105,23 @@ class PhysioNetClinicalDataset(torch.utils.data.Dataset):
     def __preprocess_clinical_df(
         self,
     ):
-        self.encoders_map = {}
-
-        # encode gender.
-        for col in self.clinical_categorical_cols:
-            le = LabelEncoder()
-            self.df[col] = le.fit_transform(self.df[col])
-            self.encoders_map[col] = le
+        if self.cat_ohe:
+            self.dummy_cat_cols = []
+            for col in self.clinical_categorical_cols:
+                feature_dummies = pd.get_dummies(
+                    self.df[col], prefix=col, drop_first=True
+                )
+                for col in feature_dummies.columns:
+                    self.df[col] = feature_dummies[col].apply(
+                        lambda x: map_to_deviation_edge(x)
+                    )
+                    self.dummy_cat_cols.append(col)
+        else:
+            self.encoders_map = {}
+            for col in self.clinical_categorical_cols:
+                le = LabelEncoder()
+                self.df[col] = le.fit_transform(self.df[col])
+                self.encoders_map[col] = le
 
         if self.normalise_clinical_num:
             self.clinical_std_mean = {}
@@ -138,12 +154,21 @@ class PhysioNetClinicalDataset(torch.utils.data.Dataset):
         #     not self.clinical_numerical_cols is None
         #     and len(self.clinical_numerical_cols) > 0
         # ):
-        return torch.tensor(
-            np.array(
-                data[self.clinical_numerical_cols + self.clinical_categorical_cols],
-                dtype=float,
-            )
-        ).float()
+        return (
+            torch.tensor(
+                np.array(
+                    data[self.clinical_numerical_cols + self.dummy_cat_cols],
+                    dtype=float,
+                )
+            ).float()
+            if self.cat_ohe
+            else torch.tensor(
+                np.array(
+                    data[self.clinical_numerical_cols + self.clinical_categorical_cols],
+                    dtype=float,
+                )
+            ).float()
+        )
         # clinical_cat = None
         # if (
         #     not self.clinical_categorical_cols is None
@@ -191,6 +216,10 @@ class PhysioNetImageDataset(torch.utils.data.Dataset):
         self.image_size = image_size
         self.split_str = split_str
         self.df = pd.read_csv(self.df_path)
+
+        # to match the size of clinical dataset.
+        # self.df["pain"] = self.df["pain"].apply(get_number)
+        # self.df = self.df[~self.df["pain"].isna()]
 
         if not self.split_str is None:
             self.df: pd.DataFrame = self.df[self.df["split"] == self.split_str]
@@ -336,7 +365,7 @@ class PILRandomGaussianBlur(object):
 class GrayToRGB(object):
     def __init__(self) -> None:
         pass
-    
+
     def __call__(self, x):
         x = x.repeat(3, 1, 1) / 255
         return x

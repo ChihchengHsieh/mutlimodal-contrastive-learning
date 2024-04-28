@@ -175,6 +175,8 @@ class REFLACXLesionDetectionDataset(torch.utils.data.Dataset):
             "orig_size": torch.tensor(
                 [self.image_size, self.image_size], dtype=torch.int64
             ),
+            "image_path": image_path,
+            # "bbox_path": bbox_path,
         }
 
         return xray, target
@@ -196,8 +198,18 @@ class REFLACXLesionDetectionDataset(torch.utils.data.Dataset):
             return f"exceed label range :{idx}"
 
         return self.label_cols[idx - 1]
-    
+
     def num_classes(
         self,
     ):
         return len(self.label_cols)
+
+    def get_xray(self, image_path):
+        xray = read_image(image_path)
+        transformed = self.transform(
+            image=xray.repeat(3, 1, 1).permute(1, 2, 0).numpy(),
+            bboxes=torch.tensor([]),
+            label=torch.tensor([]),
+        )
+        xray = torch.tensor(transformed["image"]).permute(2, 0, 1) / 255
+        return xray
